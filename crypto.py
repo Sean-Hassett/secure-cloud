@@ -1,19 +1,16 @@
 # https://nitratine.net/blog/post/asymmetric-encryption-and-decryption-in-python/
 
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
 
 
 def generate_keys(public_exponent, key_size):
     private_key = rsa.generate_private_key(
-    public_exponent=public_exponent,
-    key_size=key_size,
-    backend=default_backend()
+        public_exponent=public_exponent,
+        key_size=key_size,
+        backend=default_backend()
     )
-    public_key = private_key.public_key()
 
     pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
@@ -23,6 +20,7 @@ def generate_keys(public_exponent, key_size):
     with open('keys/private_key.pem', 'wb') as f:
         f.write(pem)
 
+    public_key = private_key.public_key()
     pem = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
@@ -54,25 +52,20 @@ def decrypt(private_key, message):
 
 
 generate_keys(65537, 2048)
-
-
 with open('keys/private_key.pem', 'rb') as key_file:
     private_key = serialization.load_pem_private_key(
         key_file.read(),
         password=None,
         backend=default_backend()
     )
-
 with open('keys/public_key.pem', 'rb') as key_file:
     public_key = serialization.load_pem_public_key(
         key_file.read(),
         backend=default_backend()
     )
 
-
 encrypted = encrypt(public_key, b'Hello World!')
 decrypted = decrypt(private_key, encrypted)
 
 print(encrypted)
 print(decrypted)
-
