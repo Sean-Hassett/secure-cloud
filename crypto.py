@@ -20,7 +20,7 @@ def generate_symmetric_key():
     return secret_key
 
 
-def generate_keys(public_exponent, key_size):
+def generate_keys(public_exponent, key_size, private_file, public_file):
     private_key = rsa.generate_private_key(
         public_exponent=public_exponent,
         key_size=key_size,
@@ -31,7 +31,7 @@ def generate_keys(public_exponent, key_size):
         format=serialization.PrivateFormat.PKCS8,
         encryption_algorithm=serialization.NoEncryption())
 
-    with open("keys/private_key.pem", "wb") as f:
+    with open(private_file, "wb") as f:
         f.write(pem)
 
     public_key = private_key.public_key()
@@ -39,7 +39,7 @@ def generate_keys(public_exponent, key_size):
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo)
 
-    with open("keys/public_key.pem", "wb") as f:
+    with open(public_file, "wb") as f:
         f.write(pem)
 
 
@@ -104,20 +104,23 @@ def decrypt_file(symmetric_key, input_file, output_file):
             out_file.truncate(file_size)
 
 
-generate_keys(65537, 2048)
-with open("keys/private_key.pem", "rb") as key_file:
+private_file = "keys/private_key.pem"
+public_file = "keys/public_key.pem"
+
+generate_keys(65537, 2048, private_file, public_file)
+with open(private_file, "rb") as key_file:
     private_key = serialization.load_pem_private_key(
         key_file.read(),
         password=None,
         backend=default_backend())
 
-with open("keys/public_key.pem", "rb") as key_file:
+with open(public_file, "rb") as key_file:
     public_key = serialization.load_pem_public_key(
         key_file.read(),
         backend=default_backend())
 
 
-test_file = "test.jpg"
+test_file = "test.txt"
 symmetric_key = generate_symmetric_key()
 
 encrypted_file = "{}.encrypted".format(test_file)
