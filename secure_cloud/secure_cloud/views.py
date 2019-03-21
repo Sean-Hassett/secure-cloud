@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 import dropbox
 import json
 
@@ -29,7 +29,21 @@ def view_files(request):
         result = dbx.files_list_folder_continue(result.cursor)
         files = process_folder_entries(files, result.entries)
 
-    filenames = [file[1:] for file in sorted(files)]
+    filenames = [[file[1:]] for file in sorted(files)]
+    for filename in filenames:
+        filename.append("/files/download/" + filename[0])
+
     context = {"filenames": filenames}
 
     return render(request, "secure_cloud/files_list.html", context)
+
+
+def download_file(request, filename):
+    with open("secure_cloud/config.json") as f:
+        data = json.load(f)
+
+    dbx = dropbox.Dropbox(data["access"])
+    metadata, f = dbx.files_download('/' + filename)
+    print(f.content)
+
+    return redirect("view_files")
