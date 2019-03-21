@@ -1,7 +1,8 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.http import HttpResponse
 import dropbox
 import json
+from . import crypto
 
 
 def landing_page(request):
@@ -45,9 +46,12 @@ def download_file(request, filename):
 
     dbx = dropbox.Dropbox(data["access"])
     metadata, f = dbx.files_download('/' + filename)
-    print(f.content)
 
     response = HttpResponse(f.content)
     response['content_type'] = ''
     response['Content-Disposition'] = 'attachment;filename={}'.format(filename)
     return response
+
+
+def upload_file(request):
+    ''
