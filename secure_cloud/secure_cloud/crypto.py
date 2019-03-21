@@ -100,28 +100,3 @@ def decrypt_file(symmetric_key, input_file, output_file):
                     break
                 out_file.write(decryptor.update(chunk))
             out_file.truncate(file_size)
-
-
-private_file = "keys/private_key.pem"
-public_file = "keys/public_key.pem"
-
-generate_keys(65537, 2048, private_file, public_file)
-with open(private_file, "rb") as key_file:
-    private_key = serialization.load_pem_private_key(
-        key_file.read(),
-        password=None,
-        backend=default_backend())
-
-with open(public_file, "rb") as key_file:
-    public_key = serialization.load_pem_public_key(
-        key_file.read(),
-        backend=default_backend())
-
-test_file = "test.txt"
-symmetric_key = generate_symmetric_key()
-
-encrypted_file = "{}.encrypted".format(test_file)
-encrypt_file(symmetric_key, test_file, encrypted_file)
-
-decrypted_file = "{}(new)".format(test_file)
-decrypt_file(symmetric_key, encrypted_file, decrypted_file)

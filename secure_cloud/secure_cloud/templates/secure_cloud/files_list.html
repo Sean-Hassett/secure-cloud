@@ -5,10 +5,16 @@
     <title>Files</title>
 </head>
 <body>
-    <ul>
-        {% for file in filenames %}
-        <li><a href="{{ file.1 }}">{{ file.0 }}</a></li>
-        {% endfor %}
-    </ul>
+<ul>
+    {% for file in filenames %}
+    <li><a href="{{ file.1 }}">{{ file.0 }}</a></li>
+    {% endfor %}
+</ul>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="myfile">
+    <button type="submit">Upload</button>
+</form>
 </body>
 </html>
