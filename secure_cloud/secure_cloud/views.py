@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.http import HttpResponse
 import dropbox
 import json
 
@@ -46,4 +47,7 @@ def download_file(request, filename):
     metadata, f = dbx.files_download('/' + filename)
     print(f.content)
 
-    return redirect("view_files")
+    response = HttpResponse(f.content)
+    response['content_type'] = ''
+    response['Content-Disposition'] = 'attachment;filename={}'.format(filename)
+    return response
