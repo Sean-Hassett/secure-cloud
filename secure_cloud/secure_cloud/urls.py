@@ -27,5 +27,7 @@ urlpatterns = [
 
     path('files/download/<filename>', views.download_file, name="file_download"),
 
+    path('files/upload', views.upload_file, name="upload"),
+
     path('admin/', admin.site.urls)
 ]

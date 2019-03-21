@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 import dropbox
 import json
@@ -43,8 +43,8 @@ def view_files(request):
 def download_file(request, filename):
     with open("secure_cloud/config.json") as f:
         data = json.load(f)
-
     dbx = dropbox.Dropbox(data["access"])
+
     metadata, f = dbx.files_download('/' + filename)
 
     response = HttpResponse(f.content)
@@ -54,4 +54,14 @@ def download_file(request, filename):
 
 
 def upload_file(request):
-    ''
+    if request.method == 'POST' and request.FILES['upfile']:
+        up_file = request.FILES['upfile']
+
+        with open("secure_cloud/config.json") as f:
+            data = json.load(f)
+        dbx = dropbox.Dropbox(data["access"])
+
+        file_to = "/{}".format(up_file.name)
+        dbx.files_upload(up_file.file.read(), file_to)
+
+    return redirect("view_files")
