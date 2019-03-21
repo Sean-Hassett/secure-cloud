@@ -81,8 +81,7 @@ def encrypt_file(symmetric_key, input_file, output_file):
                 elif len(chunk) % BLOCK_SIZE != 0:
                     # pad with spaces to make len(chunk) a multiple of 16
                     chunk += b' ' * (BLOCK_SIZE - len(chunk) % BLOCK_SIZE)
-                ciphertext = encryptor.update(chunk)
-                out_file.write(ciphertext)
+                out_file.write(encryptor.update(chunk))
 
 
 def decrypt_file(symmetric_key, input_file, output_file):
@@ -99,8 +98,7 @@ def decrypt_file(symmetric_key, input_file, output_file):
                 chunk = in_file.read(CHUNK_SIZE)
                 if len(chunk) == 0:
                     break
-                plaintext = decryptor.update(chunk)
-                out_file.write(plaintext)
+                out_file.write(decryptor.update(chunk))
             out_file.truncate(file_size)
 
 
@@ -118,7 +116,6 @@ with open(public_file, "rb") as key_file:
     public_key = serialization.load_pem_public_key(
         key_file.read(),
         backend=default_backend())
-
 
 test_file = "test.txt"
 symmetric_key = generate_symmetric_key()
