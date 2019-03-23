@@ -5,16 +5,18 @@
     <title>Files</title>
 </head>
 <body>
-<ul>
-    {% for file in filenames %}
-    <li><a href="{{ file.1 }}">{{ file.0 }}</a></li>
-    {% endfor %}
-</ul>
+    <ul>
+        {% for file in filenames %}
+            <li><a href="{{ file.1 }}">{{ file.0 }}</a></li>
+        {% endfor %}
+    </ul>
 
-<form method="post" enctype="multipart/form-data" action = "{% url "upload" %}">
-    {% csrf_token %}
-    <input type="file" name="upfile">
-    <button type="submit">Upload</button>
-</form>
+    <form method="post" enctype="multipart/form-data" action = "{% url "upload" %}">
+        {% csrf_token %}
+        <input type="file" name="upfile">
+        <button type="submit">Upload</button>
+    </form>
+    <br>
+    <button class="btn"><a href="/files/symkey/">Generate Symmetric Key</a></button>
 </body>
 </html>

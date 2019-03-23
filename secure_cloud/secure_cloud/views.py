@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 import dropbox
 import json
+import os
 from . import crypto
 
 
@@ -18,7 +19,7 @@ def view_files(request):
                 current_state.pop(entry.path_lower, None)
         return current_state
 
-    with open("secure_cloud/config.json") as f:
+    with open("secure_cloud/config.json", "r") as f:
         data = json.load(f)
 
     dbx = dropbox.Dropbox(data["access"])
@@ -41,7 +42,7 @@ def view_files(request):
 
 
 def download_file(request, filename):
-    with open("secure_cloud/config.json") as f:
+    with open("secure_cloud/config.json", "r") as f:
         data = json.load(f)
     dbx = dropbox.Dropbox(data["access"])
 
@@ -57,11 +58,30 @@ def upload_file(request):
     if request.method == 'POST' and request.FILES['upfile']:
         up_file = request.FILES['upfile']
 
-        with open("secure_cloud/config.json") as f:
+        with open("secure_cloud/config.json", "r") as f:
             data = json.load(f)
         dbx = dropbox.Dropbox(data["access"])
+        sym_key = data["keys"]["symmetric"]
+
+        enc_up_file = crypto.encrypt_file(sym_key, up_file.file)
 
         file_to = "/{}".format(up_file.name)
-        dbx.files_upload(up_file.file.read(), file_to)
+        dbx.files_upload(enc_up_file, file_to)
+
+    return redirect("view_files")
+
+
+def generate_symmetric_key(request):
+    key_length = 32
+    # generate key using cryptographically secure pseudo-random number generator
+    symmetric_key = os.urandom(key_length)
+
+    with open("secure_cloud/config.json", "r+") as f:
+        data = json.load(f)
+        data["keys"]["symmetric"] = str(symmetric_key)
+
+        f.seek(0)
+        f.truncate()
+        json.dump(data, f)
 
     return redirect("view_files")

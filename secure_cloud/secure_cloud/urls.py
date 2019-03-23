@@ -25,9 +25,11 @@ urlpatterns = [
 
     path('files/', views.view_files, name="view_files"),
 
-    path('files/download/<filename>', views.download_file, name="file_download"),
+    path('files/download/<filename>/', views.download_file, name="file_download"),
 
-    path('files/upload', views.upload_file, name="upload"),
+    path('files/upload/', views.upload_file, name="upload"),
+
+    path('files/symkey/', views.generate_symmetric_key, name="symkey"),
 
     path('admin/', admin.site.urls)
 ]
