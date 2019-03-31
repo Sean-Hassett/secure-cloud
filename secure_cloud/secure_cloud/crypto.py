@@ -5,10 +5,12 @@
 import os
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization, hashes
-from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives.asymmetric import ec, padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 
+# NIST P-256 Curve
+CURVE = ec.SECP256R1
 CHUNK_SIZE = 64*1024
 BLOCK_SIZE = 16
 
@@ -20,11 +22,18 @@ def generate_symmetric_key():
     return secret_key
 
 
-def generate_keys(public_exponent, key_size, private_file, public_file):
-    private_key = rsa.generate_private_key(
-        public_exponent=public_exponent,
-        key_size=key_size,
-        backend=default_backend())
+def generate_private_key():
+    return ec.generate_private_key(
+        CURVE,
+        default_backend()
+    )
+
+
+def generate_keys(curve, private_file, public_file):
+    private_key = ec.generate_private_key(
+        curve,
+        default_backend()
+    )
 
     pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
