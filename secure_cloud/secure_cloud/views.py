@@ -50,12 +50,11 @@ def download_file(request, filename):
     sym_key = b64decode(data["keys"]["symmetric"].encode())
 
     metadata, f = dbx.files_download('/' + filename)
+    decrypted_file_contents = crypto.decrypt_file(sym_key, f.content)
 
-    decrypted_file_contents = crypto.decrypt_file(sym_key, f)
-
-    response = HttpResponse(f.content)
+    response = HttpResponse(decrypted_file_contents)
     response['content_type'] = ''
-    response['Content-Disposition'] = 'attachment;filename={}'.format(filename)
+    response['Content-Disposition'] = 'attachment;filename={}'.format(filename[:-len(".encrypted")])
     return response
 
 
@@ -67,12 +66,11 @@ def upload_file(request):
             data = json.load(f)
         dbx = dropbox.Dropbox(data["access"])
         sym_key = b64decode(data["keys"]["symmetric"].encode())
-        print(sym_key)
 
         encrypted_file_contents = crypto.encrypt_file(sym_key, up_file.file)
         encrypted_file_name = "/{}.encrypted".format(up_file.name)
 
-        dbx.files_upload(encrypted_file_contents.encode(), encrypted_file_name)
+        dbx.files_upload(encrypted_file_contents, encrypted_file_name)
 
     return redirect("view_files")
 
@@ -81,12 +79,10 @@ def generate_symmetric_key(request):
     key_length = 32
     # generate key using cryptographically secure pseudo-random number generator
     symmetric_key = os.urandom(key_length)
-    print(symmetric_key)
 
     with open("secure_cloud/config.json", "r+") as f:
         data = json.load(f)
         data["keys"]["symmetric"] = b64encode(symmetric_key).decode()
-        print(data)
 
         f.seek(0)
         f.truncate()

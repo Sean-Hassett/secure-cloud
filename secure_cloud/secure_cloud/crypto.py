@@ -2,6 +2,8 @@
 # https://www.novixys.com/blog/using-aes-encryption-decryption-python-pycrypto/
 # https://cryptography.io/en/
 
+# AttributeError: '_io.BufferedRandom' object has no attribute 'getvalue'
+
 import os
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization, hashes
@@ -69,29 +71,34 @@ def encrypt_file(symmetric_key, input_file):
         default_backend()
     ).encryptor()
 
-    in_data = input_file.getvalue()
-    out_data = ""
-    out_data += str(nonce)
+    try:
+        # .txt, .jpg
+        in_data = input_file.getvalue()
+    except AttributeError:
+        # .mp4
+        in_data = input_file.read()
+
+    out_data = b""
+    out_data += nonce
 
     for i in range(0, len(in_data), CHUNK_SIZE):
         chunk = in_data[i:i + CHUNK_SIZE]
-        out_data += str(encryptor.update(chunk))
+        out_data += encryptor.update(chunk)
     return out_data
 
 
-def decrypt_file(symmetric_key, input_file):
-    nonce = input_file[0:BLOCK_SIZE]
+def decrypt_file(symmetric_key, in_data):
+    nonce = bytes(in_data)[0:BLOCK_SIZE]
     decryptor = Cipher(
         algorithms.AES(symmetric_key),
-        modes.CBC(nonce),
-        backend=default_backend()
+        modes.CTR(nonce),
+        default_backend()
     ).decryptor()
 
-    in_data = input_file.read()
-    out_data = ""
+    out_data = b""
 
-    for i in range(CHUNK_SIZE, len(in_data), CHUNK_SIZE):
+    for i in range(BLOCK_SIZE, len(in_data), CHUNK_SIZE):
         chunk = in_data[i:i + CHUNK_SIZE]
-        out_data += str(decryptor.update(chunk))
+        out_data += decryptor.update(chunk)
 
     return out_data
