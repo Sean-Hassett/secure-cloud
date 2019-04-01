@@ -47,8 +47,11 @@ def download_file(request, filename):
     with open("secure_cloud/config.json", "r") as f:
         data = json.load(f)
     dbx = dropbox.Dropbox(data["access"])
+    sym_key = b64decode(data["keys"]["symmetric"].encode())
 
     metadata, f = dbx.files_download('/' + filename)
+
+    decrypted_file_contents = crypto.decrypt_file(sym_key, f)
 
     response = HttpResponse(f.content)
     response['content_type'] = ''
@@ -63,13 +66,13 @@ def upload_file(request):
         with open("secure_cloud/config.json", "r") as f:
             data = json.load(f)
         dbx = dropbox.Dropbox(data["access"])
-        sym_key = binascii.hexlify(b64decode(data["keys"]["symmetric"]))
+        sym_key = b64decode(data["keys"]["symmetric"].encode())
         print(sym_key)
 
-        enc_up_file = crypto.encrypt_file(sym_key, up_file.file)
+        encrypted_file_contents = crypto.encrypt_file(sym_key, up_file.file)
+        encrypted_file_name = "/{}.encrypted".format(up_file.name)
 
-        file_to = "/{}".format(up_file.name)
-        dbx.files_upload(enc_up_file, file_to)
+        dbx.files_upload(encrypted_file_contents.encode(), encrypted_file_name)
 
     return redirect("view_files")
 
