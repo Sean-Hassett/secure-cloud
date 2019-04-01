@@ -4,8 +4,7 @@ import dropbox
 import json
 import os
 from base64 import b64encode, b64decode
-import binascii
-from . import crypto
+from secure_cloud import crypto
 
 
 def landing_page(request):
@@ -26,7 +25,6 @@ def view_files(request):
 
     dbx = dropbox.Dropbox(data["access"])
     result = dbx.files_list_folder(path="")
-
     files = process_folder_entries({}, result.entries)
 
     # check for and collect any additional entries
@@ -69,7 +67,6 @@ def upload_file(request):
 
         encrypted_file_contents = crypto.encrypt_file(sym_key, up_file.file)
         encrypted_file_name = "/{}.encrypted".format(up_file.name)
-
         dbx.files_upload(encrypted_file_contents, encrypted_file_name)
 
     return redirect("view_files")

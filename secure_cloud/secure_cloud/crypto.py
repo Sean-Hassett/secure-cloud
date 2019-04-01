@@ -2,8 +2,6 @@
 # https://www.novixys.com/blog/using-aes-encryption-decryption-python-pycrypto/
 # https://cryptography.io/en/
 
-# AttributeError: '_io.BufferedRandom' object has no attribute 'getvalue'
-
 import os
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization, hashes
@@ -80,7 +78,6 @@ def encrypt_file(symmetric_key, input_file):
 
     out_data = b""
     out_data += nonce
-
     for i in range(0, len(in_data), CHUNK_SIZE):
         chunk = in_data[i:i + CHUNK_SIZE]
         out_data += encryptor.update(chunk)
@@ -96,7 +93,6 @@ def decrypt_file(symmetric_key, in_data):
     ).decryptor()
 
     out_data = b""
-
     for i in range(BLOCK_SIZE, len(in_data), CHUNK_SIZE):
         chunk = in_data[i:i + CHUNK_SIZE]
         out_data += decryptor.update(chunk)
