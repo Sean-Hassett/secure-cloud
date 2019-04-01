@@ -2,7 +2,9 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 import dropbox
 import json
-from . import crypto
+import os
+from base64 import b64encode, b64decode
+from secure_cloud import crypto
 
 
 def landing_page(request):
@@ -18,12 +20,11 @@ def view_files(request):
                 current_state.pop(entry.path_lower, None)
         return current_state
 
-    with open("secure_cloud/config.json") as f:
+    with open("secure_cloud/config.json", "r") as f:
         data = json.load(f)
 
     dbx = dropbox.Dropbox(data["access"])
     result = dbx.files_list_folder(path="")
-
     files = process_folder_entries({}, result.entries)
 
     # check for and collect any additional entries
@@ -41,15 +42,17 @@ def view_files(request):
 
 
 def download_file(request, filename):
-    with open("secure_cloud/config.json") as f:
+    with open("secure_cloud/config.json", "r") as f:
         data = json.load(f)
     dbx = dropbox.Dropbox(data["access"])
+    sym_key = b64decode(data["keys"]["symmetric"].encode())
 
     metadata, f = dbx.files_download('/' + filename)
+    decrypted_file_contents = crypto.decrypt_file(sym_key, f.content)
 
-    response = HttpResponse(f.content)
+    response = HttpResponse(decrypted_file_contents)
     response['content_type'] = ''
-    response['Content-Disposition'] = 'attachment;filename={}'.format(filename)
+    response['Content-Disposition'] = 'attachment;filename={}'.format(filename[:-len(".encrypted")])
     return response
 
 
@@ -57,11 +60,29 @@ def upload_file(request):
     if request.method == 'POST' and request.FILES['upfile']:
         up_file = request.FILES['upfile']
 
-        with open("secure_cloud/config.json") as f:
+        with open("secure_cloud/config.json", "r") as f:
             data = json.load(f)
         dbx = dropbox.Dropbox(data["access"])
+        sym_key = b64decode(data["keys"]["symmetric"].encode())
 
-        file_to = "/{}".format(up_file.name)
-        dbx.files_upload(up_file.file.read(), file_to)
+        encrypted_file_contents = crypto.encrypt_file(sym_key, up_file.file)
+        encrypted_file_name = "/{}.encrypted".format(up_file.name)
+        dbx.files_upload(encrypted_file_contents, encrypted_file_name)
+
+    return redirect("view_files")
+
+
+def generate_symmetric_key(request):
+    key_length = 32
+    # generate key using cryptographically secure pseudo-random number generator
+    symmetric_key = os.urandom(key_length)
+
+    with open("secure_cloud/config.json", "r+") as f:
+        data = json.load(f)
+        data["keys"]["symmetric"] = b64encode(symmetric_key).decode()
+
+        f.seek(0)
+        f.truncate()
+        json.dump(data, f)
 
     return redirect("view_files")

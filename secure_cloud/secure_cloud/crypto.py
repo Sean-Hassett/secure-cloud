@@ -61,42 +61,40 @@ def decrypt_sym_key(private_key, encrypted_sym_key):
             label=None))
 
 
-def encrypt_file(symmetric_key, input_file, output_file):
-    file_size = (str(os.path.getsize(input_file)).zfill(BLOCK_SIZE)).encode()
-    init_vector = os.urandom(BLOCK_SIZE)
+def encrypt_file(symmetric_key, input_file):
+    nonce = os.urandom(BLOCK_SIZE)
     encryptor = Cipher(
         algorithms.AES(symmetric_key),
-        modes.CBC(init_vector),
-        backend=default_backend()
+        modes.CTR(nonce),
+        default_backend()
     ).encryptor()
 
-    with open(input_file, "rb") as in_file:
-        with open(output_file, "wb") as out_file:
-            out_file.write(file_size)
-            out_file.write(init_vector)
-            while True:
-                chunk = in_file.read(CHUNK_SIZE)
-                if len(chunk) == 0:
-                    break
-                elif len(chunk) % BLOCK_SIZE != 0:
-                    # pad with spaces to make len(chunk) a multiple of 16
-                    chunk += b' ' * (BLOCK_SIZE - len(chunk) % BLOCK_SIZE)
-                out_file.write(encryptor.update(chunk))
+    try:
+        # .txt, .jpg
+        in_data = input_file.getvalue()
+    except AttributeError:
+        # .mp4
+        in_data = input_file.read()
+
+    out_data = b""
+    out_data += nonce
+    for i in range(0, len(in_data), CHUNK_SIZE):
+        chunk = in_data[i:i + CHUNK_SIZE]
+        out_data += encryptor.update(chunk)
+    return out_data
 
 
-def decrypt_file(symmetric_key, input_file, output_file):
-    with open(input_file, "rb") as in_file:
-        file_size = int(in_file.read(BLOCK_SIZE))
-        init_vector = in_file.read(BLOCK_SIZE)
-        decryptor = Cipher(
-            algorithms.AES(symmetric_key),
-            modes.CBC(init_vector),
-            backend=default_backend()
-        ).decryptor()
-        with open(output_file, "wb") as out_file:
-            while True:
-                chunk = in_file.read(CHUNK_SIZE)
-                if len(chunk) == 0:
-                    break
-                out_file.write(decryptor.update(chunk))
-            out_file.truncate(file_size)
+def decrypt_file(symmetric_key, in_data):
+    nonce = bytes(in_data)[0:BLOCK_SIZE]
+    decryptor = Cipher(
+        algorithms.AES(symmetric_key),
+        modes.CTR(nonce),
+        default_backend()
+    ).decryptor()
+
+    out_data = b""
+    for i in range(BLOCK_SIZE, len(in_data), CHUNK_SIZE):
+        chunk = in_data[i:i + CHUNK_SIZE]
+        out_data += decryptor.update(chunk)
+
+    return out_data
