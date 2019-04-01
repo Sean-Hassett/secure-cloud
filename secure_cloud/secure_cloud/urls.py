@@ -15,8 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-
-from . import views
+from secure_cloud import views
 
 app_name = "secure_cloud"
 
@@ -30,6 +29,8 @@ urlpatterns = [
     path('files/upload/', views.upload_file, name="upload"),
 
     path('files/symkey/', views.generate_symmetric_key, name="symkey"),
+
+    path('files/keypair/', views.generate_keypair, name="keypair"),
 
     path('admin/', admin.site.urls)
 ]

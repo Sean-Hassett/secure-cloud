@@ -47,7 +47,7 @@ def download_file(request, filename):
     dbx = dropbox.Dropbox(data["access"])
     sym_key = b64decode(data["keys"]["symmetric"].encode())
 
-    metadata, f = dbx.files_download('/' + filename)
+    _, f = dbx.files_download('/' + filename)
     decrypted_file_contents = crypto.decrypt_file(sym_key, f.content)
 
     response = HttpResponse(decrypted_file_contents)
@@ -84,5 +84,26 @@ def generate_symmetric_key(request):
         f.seek(0)
         f.truncate()
         json.dump(data, f)
+
+    return redirect("view_files")
+
+
+def generate_keypair(request):
+    private_key, public_key = crypto.generate_keypair()
+    with open("secure_cloud/config.json", "r") as f:
+        data = json.load(f)
+    sym_key = b64decode(data["keys"]["symmetric"].encode())
+
+    with open("secure_cloud/keys.json", "r+") as f:
+        keys = json.load(f)
+
+        encrypted_sym_key = crypto.encrypt_sym_key(public_key, sym_key)
+
+        keys["sean"]["public"] = b64encode(public_key).decode()
+        keys["sean"]["symmetric"] = b64encode(encrypted_sym_key).decode()
+
+        f.seek(0)
+        f.truncate()
+        json.dump(keys, f)
 
     return redirect("view_files")
