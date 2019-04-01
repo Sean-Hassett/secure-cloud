@@ -3,6 +3,8 @@ from django.http import HttpResponse
 import dropbox
 import json
 import os
+from base64 import b64encode, b64decode
+import binascii
 from . import crypto
 
 
@@ -61,7 +63,8 @@ def upload_file(request):
         with open("secure_cloud/config.json", "r") as f:
             data = json.load(f)
         dbx = dropbox.Dropbox(data["access"])
-        sym_key = data["keys"]["symmetric"]
+        sym_key = binascii.hexlify(b64decode(data["keys"]["symmetric"]))
+        print(sym_key)
 
         enc_up_file = crypto.encrypt_file(sym_key, up_file.file)
 
@@ -75,10 +78,12 @@ def generate_symmetric_key(request):
     key_length = 32
     # generate key using cryptographically secure pseudo-random number generator
     symmetric_key = os.urandom(key_length)
+    print(symmetric_key)
 
     with open("secure_cloud/config.json", "r+") as f:
         data = json.load(f)
-        data["keys"]["symmetric"] = str(symmetric_key)
+        data["keys"]["symmetric"] = b64encode(symmetric_key).decode()
+        print(data)
 
         f.seek(0)
         f.truncate()

@@ -62,26 +62,24 @@ def decrypt_sym_key(private_key, encrypted_sym_key):
 
 
 def encrypt_file(symmetric_key, input_file):
-    file_size = (str(os.path.getsize(input_file)).zfill(BLOCK_SIZE))
-    init_vector = os.urandom(BLOCK_SIZE)
+    nonce = os.urandom(BLOCK_SIZE)
     encryptor = Cipher(
         algorithms.AES(symmetric_key),
-        modes.CBC(init_vector),
-        backend=default_backend()
+        modes.CTR(nonce),
+        default_backend()
     ).encryptor()
 
-    with open(input_file, "rb") as in_file:
-        out_file  = ""
-        out_file += file_size + "\n"
-        out_file += str(init_vector)
-        while True:
-            chunk = in_file.read(CHUNK_SIZE)
-            if len(chunk) == 0:
-                break
-            elif len(chunk) % BLOCK_SIZE != 0:
-                # pad with spaces to make len(chunk) a multiple of 16
-                chunk += b' ' * (BLOCK_SIZE - len(chunk) % BLOCK_SIZE)
-            out_file += str(encryptor.update(chunk))
+    val = input_file.getvalue()
+    out_file = ""
+    out_file += str(nonce)
+    for i in range(0, len(val), CHUNK_SIZE):
+        chunk = val[i:i + CHUNK_SIZE]
+        out_file += str(encryptor.update(chunk))
+    #    chunk = in_file.read(CHUNK_SIZE)
+    #    if len(chunk) == 0:
+    #        break
+    #    out_file += str(encryptor.update(chunk))
+    #print(out_file)
     return out_file
 
 
