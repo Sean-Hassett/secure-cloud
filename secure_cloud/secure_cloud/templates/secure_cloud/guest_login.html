@@ -5,6 +5,7 @@
     <title>Login</title>
 </head>
 <body>
+    {% if not requesting %}
     <form action="{% url 'guest_login' %}" method="post">
         {% csrf_token %}
         <div class="form-group">
@@ -14,6 +15,20 @@
         </div>
     </form>
     <p>{{ name }}</p>
+    {% endif %}
+    {% if requesting %}
+    <h4>You are not a trusted user.</h4>
+    <p>Click the button below to request access.</p>
+    <form action="{% url 'request_access' %}" method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <div class="input-group">
+                <input class="form-control input-lg" name="guest_name" value={{ name }} onfocus="placeholder=''" onblur="placeholder = 'Enter your name...'" />
+            </div>
+        </div>
+        <button class="btn">Request Access</></button>
+    </form>
+    {% endif %}
 </form>
 </body>
 </html>

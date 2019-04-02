@@ -8,6 +8,9 @@ from base64 import b64encode, b64decode
 from secure_cloud import crypto
 
 
+pending_requests = []
+
+
 def landing_page(request):
     return render(request, "secure_cloud/index.html")
 
@@ -15,10 +18,52 @@ def landing_page(request):
 def guest_login(request):
     try:
         guest_name = request.POST['guest_name'].lower()
-        context = {"name": guest_name}
+
+        with open("secure_cloud/config.json", "r") as f:
+            data = json.load(f)
+        dbx = dropbox.Dropbox(data["access"])
+        _, k = dbx.files_download('/keys.json')
+
+        keys = json.loads(k.content)
+        if guest_name in keys:
+            return redirect("view_files")
+        else:
+            context = {"name": guest_name,
+                       "requesting": True}
+            return render(request, "secure_cloud/guest_login.html", context)
     except MultiValueDictKeyError:
-        context = {}
+        context = {"requesting": False}
     return render(request, "secure_cloud/guest_login.html", context)
+
+
+def request_access(request):
+    guest_name = request.POST['guest_name'].lower()
+    pending_requests.append(guest_name)
+
+    with open("secure_cloud/config.json", "r") as f:
+        data = json.load(f)
+    dbx = dropbox.Dropbox(data["access"])
+    _, k = dbx.files_download('/keys.json')
+
+    keys = json.loads(k.content)
+
+    private_key, public_key = crypto.generate_keypair()
+
+    info = {"public": b64encode(public_key).decode(),
+            "symmetric": '',
+            "owner": False,
+            "approved": False}
+    keys[guest_name] = info
+    keys = json.dumps(keys)
+
+    dbx.files_delete('/keys.json')
+    dbx.files_upload(keys.encode(), '/keys.json')
+
+    return redirect("landing_page")
+
+
+def grant_access(request):
+    ''
 
 
 def view_files(request):
@@ -63,6 +108,7 @@ def download_file(request, filename):
     response = HttpResponse(decrypted_file_contents)
     response['content_type'] = ''
     response['Content-Disposition'] = 'attachment;filename={}'.format(filename[:-len(".encrypted")])
+
     return response
 
 
