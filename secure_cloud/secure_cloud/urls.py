@@ -22,6 +22,8 @@ app_name = "secure_cloud"
 urlpatterns = [
     path('', views.landing_page, name="landing_page"),
 
+    path('owner/', views.owner_landing_page, name="owner_landing"),
+
     path('guest/login/', views.guest_login, name="guest_login"),
 
     path('guest/request/', views.request_access, name="request_access"),

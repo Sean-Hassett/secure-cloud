@@ -8,9 +8,6 @@ from base64 import b64encode, b64decode
 from secure_cloud import crypto
 
 
-pending_requests = []
-
-
 def landing_page(request):
     return render(request, "secure_cloud/index.html")
 
@@ -39,7 +36,6 @@ def guest_login(request):
 
 def request_access(request):
     guest_name = request.POST['guest_name'].lower()
-    pending_requests.append(guest_name)
 
     with open("secure_cloud/config.json", "r") as f:
         data = json.load(f)
@@ -60,6 +56,24 @@ def request_access(request):
     dbx.files_upload(keys.encode(), '/keys.json')
 
     return redirect("landing_page")
+
+
+def owner_landing_page(request):
+    with open("secure_cloud/config.json", "r") as f:
+        data = json.load(f)
+    dbx = dropbox.Dropbox(data["access"])
+    _, k = dbx.files_download('/keys.json')
+
+    pending_list = []
+    keys = json.loads(k.content)
+    for key in keys:
+        print(key)
+        if not keys[key]["approved"]:
+            pending_list.append(key)
+
+    context = {"pending": pending_list}
+
+    return render(request, "secure_cloud/owner_landing.html", context)
 
 
 def grant_access(request):
