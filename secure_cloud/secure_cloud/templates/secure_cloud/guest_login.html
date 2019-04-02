@@ -5,7 +5,7 @@
     <title>Login</title>
 </head>
 <body>
-    {% if not requesting %}
+    {% if not requesting and not pending %}
     <form action="{% url 'guest_login' %}" method="post">
         {% csrf_token %}
         <div class="form-group">
@@ -27,6 +27,12 @@
             </div>
         </div>
         <button class="btn">Request Access</></button>
+    </form>
+    {% endif %}
+    {% if pending %}
+    <h4>Hello, {{ name }}. Your access request is still pending.</h4>
+    <form action={% url 'landing_page' %}>
+        <button class="btn">Home</button>
     </form>
     {% endif %}
 </form>

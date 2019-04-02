@@ -23,10 +23,17 @@ def guest_login(request):
 
         keys = json.loads(k.content)
         if guest_name in keys:
-            return redirect("view_files")
+            if keys[guest_name]["approved"]:
+                return redirect("view_files")
+            else:
+                context = {"name": guest_name,
+                           "requesting": False,
+                           "pending": True}
+                return render(request, "secure_cloud/guest_login.html", context)
         else:
             context = {"name": guest_name,
-                       "requesting": True}
+                       "requesting": True,
+                       "pending": False}
             return render(request, "secure_cloud/guest_login.html", context)
     except MultiValueDictKeyError:
         context = {"requesting": False}
