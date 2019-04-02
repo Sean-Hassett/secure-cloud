@@ -22,7 +22,9 @@ app_name = "secure_cloud"
 urlpatterns = [
     path('', views.landing_page, name="landing_page"),
 
-    path('files/', views.view_files, name="view_files"),
+    path('guest/login/', views.guest_login, name="guest_login"),
+
+    path('files/owner/', views.view_files, name="view_files"),
 
     path('files/download/<filename>/', views.download_file, name="file_download"),
 

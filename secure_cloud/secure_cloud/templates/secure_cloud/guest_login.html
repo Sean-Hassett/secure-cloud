@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+</head>
+<body>
+    <form action="{% url 'guest_login' %}" method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <div class="input-group">
+                <input class="form-control input-lg" name="guest_name" placeholder="Enter your name..." onfocus="placeholder=''" onblur="placeholder = 'Enter your name...'" />
+            </div>
+        </div>
+    </form>
+    <p>{{ name }}</p>
+</form>
+</body>
+</html>

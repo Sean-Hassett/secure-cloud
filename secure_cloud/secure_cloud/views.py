@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
+from django.utils.datastructures import MultiValueDictKeyError
 import dropbox
 import json
 import os
@@ -9,6 +10,15 @@ from secure_cloud import crypto
 
 def landing_page(request):
     return render(request, "secure_cloud/index.html")
+
+
+def guest_login(request):
+    try:
+        guest_name = request.POST['guest_name'].lower()
+        context = {"name": guest_name}
+    except MultiValueDictKeyError:
+        context = {}
+    return render(request, "secure_cloud/guest_login.html", context)
 
 
 def view_files(request):
