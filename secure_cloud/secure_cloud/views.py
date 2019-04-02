@@ -33,6 +33,7 @@ def guest_login(request):
             return render(request, "secure_cloud/guest_login.html", context)
     except MultiValueDictKeyError:
         context = {"requesting": False}
+
     return render(request, "secure_cloud/guest_login.html", context)
 
 
@@ -46,7 +47,6 @@ def request_access(request):
     _, k = dbx.files_download('/keys.json')
 
     keys = json.loads(k.content)
-
     private_key, public_key = crypto.generate_keypair()
 
     info = {"public": b64encode(public_key).decode(),
@@ -87,9 +87,10 @@ def view_files(request):
         result = dbx.files_list_folder_continue(result.cursor)
         files = process_folder_entries(files, result.entries)
 
-    filenames = [[file[1:]] for file in sorted(files)]
-    for filename in filenames:
-        filename.append("/files/download/" + filename[0])
+    filenames = []
+    for filename in sorted(files):
+        if filename != "/keys.json":
+            filenames.append([filename[1:], "/files/download" + filename])
 
     context = {"filenames": filenames}
 

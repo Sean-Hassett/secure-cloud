@@ -26,7 +26,7 @@ urlpatterns = [
 
     path('guest/request/', views.request_access, name="request_access"),
 
-    path('files/owner/', views.view_files, name="view_files"),
+    path('files/', views.view_files, name="view_files"),
 
     path('files/download/<filename>/', views.download_file, name="file_download"),
 

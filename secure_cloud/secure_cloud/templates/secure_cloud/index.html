@@ -7,11 +7,15 @@
 <body>
     <h1>Secure Cloud</h1>
     <div>
-        <button class="btn"><a href="/files/owner/">Owner</a></button>
+        <form action={% url 'view_files' %}>
+            <button class="btn">Owner</button>
+        </form>
     </div>
     <br>
     <div>
-        <button class="btn"><a href="/guest/login/">Guest</a></button>
+        <form action="{% url 'guest_login' %}">
+           <button class="btn">Guest</button>
+        </form>
     </div>
 </body>
 </html>
