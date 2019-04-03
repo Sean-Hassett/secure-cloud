@@ -6,7 +6,7 @@
 </head>
 <body>
     {% if not requesting and not pending %}
-    <form action="{% url 'guest_login' %}" method="post">
+    <form action={% url 'guest_login' %} method="post">
         {% csrf_token %}
         <div class="form-group">
             <div class="input-group">
@@ -19,14 +19,14 @@
     {% if requesting %}
     <h4>You are not a trusted user.</h4>
     <p>Click the button below to request access.</p>
-    <form action="{% url 'request_access' %}" method="post">
+    <form action={% url 'request_access' %} method="post">
         {% csrf_token %}
         <div class="form-group">
             <div class="input-group">
                 <input class="form-control input-lg" name="guest_name" value={{ name }} onfocus="placeholder=''" onblur="placeholder = 'Enter your name...'" />
             </div>
         </div>
-        <button class="btn">Request Access</></button>
+        <button class="btn">Request Access></button>
     </form>
     {% endif %}
     {% if pending %}

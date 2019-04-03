@@ -72,13 +72,16 @@ def owner_landing_page(request):
     _, k = dbx.files_download('/keys.json')
 
     pending_list = []
+    approved_list = []
     keys = json.loads(k.content)
     for key in keys:
-        print(key)
         if not keys[key]["approved"]:
             pending_list.append(key)
-
-    context = {"pending": pending_list}
+        else:
+            if not keys[key]["owner"]:
+                approved_list.append(key)
+    context = {"approved": approved_list,
+               "pending": pending_list}
 
     return render(request, "secure_cloud/owner_landing.html", context)
 

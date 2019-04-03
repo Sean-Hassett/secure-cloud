@@ -5,19 +5,25 @@
     <title>Owner</title>
 </head>
 <body>
+    <h4>Approved Users</h4>
+    <ul>
+        {% for name in approved %}
+            <li>{{ name }}</li>
+        {% endfor %}
+    </ul>
+    <br><br>
     <h4>Pending Access Requests</h4>
     <ul>
         {% for name in pending %}
             <li>{{ name }}</li>
         {% endfor %}
     </ul>
-
     <br><br>
-    <form action={% url 'view_files' %}>
+    <form action="{% url 'view_files' %}">
         <button class="btn">View Files</button>
     </form>
     <br>
-    <form action={% url 'symkey' %}>
+    <form action="{% url 'symkey' %}">
         <button class="btn">Generate Symmetric Key</button>
     </form>
 </body>
