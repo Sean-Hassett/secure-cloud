@@ -24,6 +24,8 @@ urlpatterns = [
 
     path('owner/', views.owner_landing_page, name="owner_landing"),
 
+    path('owner/grant/<guest_name>/', views.grant_access, name="grant_access"),
+
     path('guest/login/', views.guest_login, name="guest_login"),
 
     path('guest/request/', views.request_access, name="request_access"),

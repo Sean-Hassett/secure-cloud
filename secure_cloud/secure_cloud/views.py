@@ -86,8 +86,10 @@ def owner_landing_page(request):
     return render(request, "secure_cloud/owner_landing.html", context)
 
 
-def grant_access(request):
-    ''
+def grant_access(request, guest_name):
+
+
+    return redirect("owner_landing")
 
 
 def view_files(request):

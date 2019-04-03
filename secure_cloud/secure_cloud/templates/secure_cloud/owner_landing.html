@@ -5,19 +5,33 @@
     <title>Owner</title>
 </head>
 <body>
-    <h4>Approved Users</h4>
-    <ul>
-        {% for name in approved %}
-            <li>{{ name }}</li>
-        {% endfor %}
-    </ul>
+    <div style="width: 30%">
+        <h4>Approved Users</h4>
+        <ul style="columns: 2">
+            {% for name in approved %}
+                <li style="margin-bottom: 5px">{{ name }}</li>
+            {% endfor %}
+            {% for name in approved %}
+                <form action="/owner/revoke/{{ name }}/">
+                    <button class="btn" style="margin-bottom: 5px">Revoke</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
     <br><br>
-    <h4>Pending Access Requests</h4>
-    <ul>
-        {% for name in pending %}
-            <li>{{ name }}</li>
-        {% endfor %}
-    </ul>
+    <div style="width: 30%">
+        <h4>Pending Access Requests</h4>
+        <ul style="columns: 2">
+            {% for name in pending %}
+                <li style="margin-bottom: 5px">{{ name }}</li>
+            {% endfor %}
+            {% for name in pending %}
+                <form action="/owner/grant/{{ name }}/">
+                    <button class="btn" style="margin-bottom: 5px">Approve</button>
+                </form>
+            {% endfor %}
+        </ul>
+    </div>
     <br><br>
     <form action="{% url 'view_files' %}">
         <button class="btn">View Files</button>
