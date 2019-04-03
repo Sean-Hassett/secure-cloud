@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.utils.datastructures import MultiValueDictKeyError
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
 import dropbox
 import json
 import os
@@ -80,8 +82,11 @@ def owner_landing_page(request):
         else:
             if not keys[key]["owner"]:
                 approved_list.append(key)
+            else:
+                username = key
     context = {"approved": approved_list,
-               "pending": pending_list}
+               "pending": pending_list,
+               "username": username}
 
     return render(request, "secure_cloud/owner_landing.html", context)
 
@@ -92,7 +97,13 @@ def grant_access(request, guest_name):
     return redirect("owner_landing")
 
 
-def view_files(request):
+def revoke_access(request, guest_name):
+
+
+    return redirect("owner_landing")
+
+
+def view_files(request, username):
     def process_folder_entries(current_state, entries):
         for entry in entries:
             if isinstance(entry, dropbox.files.FileMetadata):
@@ -116,18 +127,29 @@ def view_files(request):
     filenames = []
     for filename in sorted(files):
         if filename != "/keys.json":
-            filenames.append([filename[1:], "/files/download" + filename])
+            filenames.append(filename[1:])
 
-    context = {"filenames": filenames}
+    context = {"filenames": filenames,
+               "username": username}
 
     return render(request, "secure_cloud/files_list.html", context)
 
 
-def download_file(request, filename):
+def download_file(request, filename, username):
     with open("secure_cloud/config.json", "r") as f:
         data = json.load(f)
     dbx = dropbox.Dropbox(data["access"])
-    sym_key = b64decode(data["keys"]["symmetric"].encode())
+
+    with open("secure_cloud/keys/private_key.pem", "rb") as key_file:
+        private_key = serialization.load_pem_private_key(
+            key_file.read(),
+            password=None,
+            backend=default_backend())
+
+    _, k = dbx.files_download('/keys.json')
+    keys = json.loads(k.content)
+    encrypted_sym_key = b64decode(keys[username]["symmetric"].encode())
+    sym_key = crypto.decrypt_sym_key(private_key, encrypted_sym_key)
 
     _, f = dbx.files_download('/' + filename)
     decrypted_file_contents = crypto.decrypt_file(sym_key, f.content)
@@ -139,20 +161,30 @@ def download_file(request, filename):
     return response
 
 
-def upload_file(request):
+def upload_file(request, username):
     if request.method == 'POST' and request.FILES['upfile']:
         up_file = request.FILES['upfile']
 
         with open("secure_cloud/config.json", "r") as f:
             data = json.load(f)
         dbx = dropbox.Dropbox(data["access"])
-        sym_key = b64decode(data["keys"]["symmetric"].encode())
+
+        with open("secure_cloud/keys/private_key.pem", "rb") as key_file:
+            private_key = serialization.load_pem_private_key(
+                key_file.read(),
+                password=None,
+                backend=default_backend())
+
+        _, k = dbx.files_download('/keys.json')
+        keys = json.loads(k.content)
+        encrypted_sym_key = b64decode(keys[username]["symmetric"].encode())
+        sym_key = crypto.decrypt_sym_key(private_key, encrypted_sym_key)
 
         encrypted_file_contents = crypto.encrypt_file(sym_key, up_file.file)
         encrypted_file_name = "/{}.encrypted".format(up_file.name)
         dbx.files_upload(encrypted_file_contents, encrypted_file_name)
 
-    return redirect("view_files")
+    return redirect("view_files", username)
 
 
 def generate_symmetric_key(request):
@@ -190,3 +222,31 @@ def generate_keypair(request):
         json.dump(keys, f)
 
     return redirect("view_files")
+
+
+def initialise(request):
+    name = request.POST['owner_name'].lower()
+    private_key, public_key = crypto.generate_keypair()
+
+    key_length = 32
+    # generate key using cryptographically secure pseudo-random number generator
+    symmetric_key = os.urandom(key_length)
+
+    with open("secure_cloud/config.json", "r") as f:
+        data = json.load(f)
+    dbx = dropbox.Dropbox(data["access"])
+
+    keys = {}
+    encrypted_sym_key = crypto.encrypt_sym_key(public_key, symmetric_key)
+
+    info = {"public": b64encode(public_key).decode(),
+            "symmetric": encrypted_sym_key,
+            "owner": True,
+            "approved": True}
+    keys[name] = info
+    keys = json.dumps(keys)
+
+    dbx.files_delete('/keys.json')
+    dbx.files_upload(keys.encode(), '/keys.json')
+
+    return redirect("owner_landing")

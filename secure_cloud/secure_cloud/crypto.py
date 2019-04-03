@@ -7,6 +7,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from base64 import b64encode, b64decode
 
 
 CHUNK_SIZE = 64*1024
@@ -55,12 +56,14 @@ def encrypt_sym_key(public_key, sym_key):
         backend=default_backend()
     )
 
-    return public_key.encrypt(
+    ret = public_key.encrypt(
         sym_key,
         padding.OAEP(
             mgf=padding.MGF1(algorithm=hashes.SHA256()),
             algorithm=hashes.SHA256(),
             label=None))
+
+    return b64encode(ret).decode()
 
 
 def decrypt_sym_key(private_key, encrypted_sym_key):

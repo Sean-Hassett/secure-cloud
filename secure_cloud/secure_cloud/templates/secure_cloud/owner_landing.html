@@ -33,12 +33,20 @@
         </ul>
     </div>
     <br><br>
-    <form action="{% url 'view_files' %}">
+    <form action="/files/{{ username }}">
         <button class="btn">View Files</button>
     </form>
-    <br>
-    <form action="{% url 'symkey' %}">
-        <button class="btn">Generate Symmetric Key</button>
+    <br><br><br>
+    <h4 style="color: red">WARNING!</h4>
+    <p>Initialising will overwrite your private/public keypair and the symmetric key. It will also reset the list of trusted users.<br />Files that were encrypted with the old symmetric key will not be decryptable anymore.</p>
+    <form action={% url 'initialise' %} method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <div class="input-group">
+                <input class="form-control input-lg" name="owner_name" placeholder="Enter your name..." onfocus="placeholder=''" onblur="placeholder = 'Enter your name...'" />
+            </div>
+        </div>
+        <button class="btn">Initialise</button>
     </form>
 </body>
 </html>

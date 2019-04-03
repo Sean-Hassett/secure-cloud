@@ -7,11 +7,11 @@
 <body>
     <ul>
         {% for file in filenames %}
-            <li><a href="{{ file.1 }}">{{ file.0 }}</a></li>
+            <li><a href="/files/{{ username }}/download/{{ file }}/">{{ file }}</a></li>
         {% endfor %}
     </ul>
 
-    <form method="post" enctype="multipart/form-data" action = "{% url "upload" %}">
+    <form method="post" enctype="multipart/form-data" action = "/files/{{ username }}/upload/">
         {% csrf_token %}
         <input type="file" name="upfile">
         <button type="submit">Upload</button>
