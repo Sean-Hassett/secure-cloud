@@ -10,8 +10,6 @@ urlpatterns = [
 
     path('owner/', views.owner_landing_page, name="owner_landing"),
 
-    path('owner/symkey/', views.generate_symmetric_key, name="symkey"),
-
     path('owner/grant/<guest_name>/', views.grant_access, name="grant_access"),
 
     path('owner/revoke/<guest_name>/', views.revoke_access, name="revoke_access"),
@@ -25,6 +23,4 @@ urlpatterns = [
     path('files/<username>/download/<filename>/', views.download_file, name="file_download"),
 
     path('files/<username>/upload/', views.upload_file, name="upload"),
-
-    # path('files/keypair/', views.generate_keypair, name="keypair"),
 ]

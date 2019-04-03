@@ -14,6 +14,30 @@ def landing_page(request):
     return render(request, "secure_cloud/index.html")
 
 
+def owner_landing_page(request):
+    with open("secure_cloud/config.json", "r") as f:
+        data = json.load(f)
+    dbx = dropbox.Dropbox(data["access"])
+    _, k = dbx.files_download('/keys.json')
+
+    pending_list = []
+    approved_list = []
+    keys = json.loads(k.content)
+    for key in keys:
+        if not keys[key]["approved"]:
+            pending_list.append(key)
+        else:
+            if not keys[key]["owner"]:
+                approved_list.append(key)
+            else:
+                username = key
+    context = {"approved": approved_list,
+               "pending": pending_list,
+               "username": username}
+
+    return render(request, "secure_cloud/owner_landing.html", context)
+
+
 def guest_login(request):
     try:
         guest_name = request.POST['guest_name'].lower()
@@ -67,30 +91,6 @@ def request_access(request):
     return redirect("landing_page")
 
 
-def owner_landing_page(request):
-    with open("secure_cloud/config.json", "r") as f:
-        data = json.load(f)
-    dbx = dropbox.Dropbox(data["access"])
-    _, k = dbx.files_download('/keys.json')
-
-    pending_list = []
-    approved_list = []
-    keys = json.loads(k.content)
-    for key in keys:
-        if not keys[key]["approved"]:
-            pending_list.append(key)
-        else:
-            if not keys[key]["owner"]:
-                approved_list.append(key)
-            else:
-                username = key
-    context = {"approved": approved_list,
-               "pending": pending_list,
-               "username": username}
-
-    return render(request, "secure_cloud/owner_landing.html", context)
-
-
 def grant_access(request, guest_name):
     with open("secure_cloud/config.json", "r") as f:
         data = json.load(f)
@@ -127,7 +127,18 @@ def grant_access(request, guest_name):
 
 
 def revoke_access(request, guest_name):
+    with open("secure_cloud/config.json", "r") as f:
+        data = json.load(f)
+    dbx = dropbox.Dropbox(data["access"])
+    _, k = dbx.files_download('/keys.json')
 
+    keys = json.loads(k.content)
+    keys.pop(guest_name, None)
+
+    keys = json.dumps(keys)
+
+    dbx.files_delete('/keys.json')
+    dbx.files_upload(keys.encode(), '/keys.json')
 
     return redirect("owner_landing")
 
@@ -214,43 +225,6 @@ def upload_file(request, username):
         dbx.files_upload(encrypted_file_contents, encrypted_file_name)
 
     return redirect("view_files", username)
-
-
-def generate_symmetric_key(request):
-    key_length = 32
-    # generate key using cryptographically secure pseudo-random number generator
-    symmetric_key = os.urandom(key_length)
-
-    with open("secure_cloud/config.json", "r+") as f:
-        data = json.load(f)
-        data["keys"]["symmetric"] = b64encode(symmetric_key).decode()
-
-        f.seek(0)
-        f.truncate()
-        json.dump(data, f)
-
-    return redirect("view_files")
-
-
-def generate_keypair(request):
-    private_key, public_key = crypto.generate_keypair()
-    with open("secure_cloud/config.json", "r") as f:
-        data = json.load(f)
-    sym_key = b64decode(data["keys"]["symmetric"].encode())
-
-    with open("secure_cloud/keys.json", "r+") as f:
-        keys = json.load(f)
-
-        encrypted_sym_key = crypto.encrypt_sym_key(public_key, sym_key)
-
-        keys["sean"]["public"] = b64encode(public_key).decode()
-        keys["sean"]["symmetric"] = b64encode(encrypted_sym_key).decode()
-
-        f.seek(0)
-        f.truncate()
-        json.dump(keys, f)
-
-    return redirect("view_files")
 
 
 def initialise(request):
