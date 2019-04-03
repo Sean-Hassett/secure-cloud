@@ -26,7 +26,7 @@ def guest_login(request):
         keys = json.loads(k.content)
         if guest_name in keys:
             if keys[guest_name]["approved"]:
-                return redirect("view_files")
+                return redirect("view_files", guest_name)
             else:
                 context = {"name": guest_name,
                            "requesting": False,
@@ -92,7 +92,36 @@ def owner_landing_page(request):
 
 
 def grant_access(request, guest_name):
+    with open("secure_cloud/config.json", "r") as f:
+        data = json.load(f)
+    dbx = dropbox.Dropbox(data["access"])
+    _, k = dbx.files_download('/keys.json')
 
+    keys = json.loads(k.content)
+    for key in keys:
+        if keys[key]["owner"]:
+            owner_name = key
+
+    encrypted_sym_key = b64decode(keys[owner_name]["symmetric"].encode())
+    with open("secure_cloud/keys/private_key.pem", "rb") as key_file:
+        private_key = serialization.load_pem_private_key(
+            key_file.read(),
+            password=None,
+            backend=default_backend())
+    sym_key = crypto.decrypt_sym_key(private_key, encrypted_sym_key)
+
+    public_key = b64decode(keys[guest_name]["public"].encode())
+    encrypted_sym_key = crypto.encrypt_sym_key(public_key, sym_key)
+
+    info = {"public": b64encode(public_key).decode(),
+            "symmetric": encrypted_sym_key,
+            "owner": False,
+            "approved": True}
+    keys[guest_name] = info
+    keys = json.dumps(keys)
+
+    dbx.files_delete('/keys.json')
+    dbx.files_upload(keys.encode(), '/keys.json')
 
     return redirect("owner_landing")
 
@@ -238,6 +267,10 @@ def initialise(request):
 
     keys = {}
     encrypted_sym_key = crypto.encrypt_sym_key(public_key, symmetric_key)
+    private_key = serialization.load_pem_private_key(
+        private_key,
+        password=None,
+        backend=default_backend())
 
     info = {"public": b64encode(public_key).decode(),
             "symmetric": encrypted_sym_key,
