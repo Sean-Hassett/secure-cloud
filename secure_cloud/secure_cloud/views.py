@@ -232,7 +232,7 @@ def initialise(request):
     private_key, public_key = crypto.generate_keypair()
 
     key_length = 32
-    # generate key using cryptographically secure pseudo-random number generator
+    # generate symmetric key using cryptographically secure pseudo-random number generator
     symmetric_key = os.urandom(key_length)
 
     with open("secure_cloud/config.json", "r") as f:
@@ -241,10 +241,6 @@ def initialise(request):
 
     keys = {}
     encrypted_sym_key = crypto.encrypt_sym_key(public_key, symmetric_key)
-    private_key = serialization.load_pem_private_key(
-        private_key,
-        password=None,
-        backend=default_backend())
 
     info = {"public": b64encode(public_key).decode(),
             "symmetric": encrypted_sym_key,

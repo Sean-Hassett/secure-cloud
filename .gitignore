@@ -1,7 +1,6 @@
 /venv/
 *.pyc
 .idea/
-keys/
 *.txt
 *.encrypted
 *.jpg
