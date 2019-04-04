@@ -1,4 +1,5 @@
 from django.urls import path
+from django.conf.urls import include
 from secure_cloud import views
 
 app_name = "secure_cloud"
@@ -18,9 +19,5 @@ urlpatterns = [
 
     path('guest/request/', views.request_access, name="request_access"),
 
-    path('files/<username>/', views.view_files, name="view_files"),
-
-    path('files/<username>/download/<filename>/', views.download_file, name="file_download"),
-
-    path('files/<username>/upload/', views.upload_file, name="upload"),
+    path('files/', include('files.urls', namespace='files'))
 ]

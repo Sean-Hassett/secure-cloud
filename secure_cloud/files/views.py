@@ -5,7 +5,7 @@ from cryptography.hazmat.primitives import serialization
 import dropbox
 import json
 from base64 import b64decode
-from secure_cloud import crypto
+from secure_cloud.utils import crypto
 
 
 def view_files(request, username):
@@ -17,7 +17,7 @@ def view_files(request, username):
                 current_state.pop(entry.path_lower, None)
         return current_state
 
-    with open("secure_cloud/config.json", "r") as f:
+    with open("secure_cloud/config/config.json", "r") as f:
         data = json.load(f)
 
     dbx = dropbox.Dropbox(data["access"])
@@ -41,7 +41,7 @@ def view_files(request, username):
 
 
 def download_file(request, filename, username):
-    with open("secure_cloud/config.json", "r") as f:
+    with open("secure_cloud/config/config.json", "r") as f:
         data = json.load(f)
     dbx = dropbox.Dropbox(data["access"])
 
@@ -70,7 +70,7 @@ def upload_file(request, username):
     if request.method == 'POST' and request.FILES['upfile']:
         up_file = request.FILES['upfile']
 
-        with open("secure_cloud/config.json", "r") as f:
+        with open("secure_cloud/config/config.json", "r") as f:
             data = json.load(f)
         dbx = dropbox.Dropbox(data["access"])
 
