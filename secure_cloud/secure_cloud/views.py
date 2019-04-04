@@ -54,16 +54,16 @@ def guest_login(request):
                 context = {"name": guest_name,
                            "requesting": False,
                            "pending": True}
-                return render(request, "secure_cloud/guest_login.html", context)
+                return render(request, "secure_cloud/guest_landing.html", context)
         else:
             context = {"name": guest_name,
                        "requesting": True,
                        "pending": False}
-            return render(request, "secure_cloud/guest_login.html", context)
+            return render(request, "secure_cloud/guest_landing.html", context)
     except MultiValueDictKeyError:
         context = {"requesting": False}
 
-    return render(request, "secure_cloud/guest_login.html", context)
+    return render(request, "secure_cloud/guest_landing.html", context)
 
 
 def request_access(request):

@@ -37,7 +37,7 @@ def view_files(request, username):
     context = {"filenames": filenames,
                "username": username}
 
-    return render(request, "secure_cloud/files_list.html", context)
+    return render(request, "files/files_list.html", context)
 
 
 def download_file(request, filename, username):

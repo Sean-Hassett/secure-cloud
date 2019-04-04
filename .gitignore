@@ -1,9 +1,5 @@
 /venv/
 *.pyc
 .idea/
-*.txt
-*.encrypted
-*.jpg
-*.mp4
-*.json
+/test_files/
 secure_cloud/db.sqlite3
