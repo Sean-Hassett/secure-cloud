@@ -96,7 +96,7 @@ def request_access(request):
         data = json.load(f)
     dbx = dropbox.Dropbox(data["access"])
 
-    # retrive keys.json from Dropbox
+    # retrieve keys.json from Dropbox
     _, k = dbx.files_download('/keys.json')
 
     # load keys.json into a dict
@@ -129,7 +129,7 @@ def grant_access(request, guest_name):
         data = json.load(f)
     dbx = dropbox.Dropbox(data["access"])
 
-    # retrive keys.json from Dropbox
+    # retrieve keys.json from Dropbox
     _, k = dbx.files_download('/keys.json')
 
     # load keys.json into a dict and establish the owner's name
@@ -148,7 +148,7 @@ def grant_access(request, guest_name):
             backend=default_backend())
     sym_key = crypto.decrypt_sym_key(private_key, encrypted_sym_key)
 
-    # retrieve the guest's publbic key and use it to encrypt sym key
+    # retrieve the guest's public key and use it to encrypt sym key
     public_key = b64decode(keys[guest_name]["public"].encode())
     encrypted_sym_key = crypto.encrypt_sym_key(public_key, sym_key)
 
@@ -176,7 +176,7 @@ def revoke_access(request, guest_name):
         data = json.load(f)
     dbx = dropbox.Dropbox(data["access"])
 
-    # retrive keys.json from Dropbox
+    # retrieve keys.json from Dropbox
     _, k = dbx.files_download('/keys.json')
 
     # load keys.json into a dict
