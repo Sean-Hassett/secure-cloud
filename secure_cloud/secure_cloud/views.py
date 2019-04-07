@@ -133,6 +133,61 @@ def revoke_access(request, guest_name):
 
     keys = json.loads(k.content)
     keys.pop(guest_name, None)
+    for key in keys:
+        if keys[key]["owner"]:
+            owner_name = key
+
+    with open("secure_cloud/keys/private_key.pem", "rb") as key_file:
+        private_key = serialization.load_pem_private_key(
+            key_file.read(),
+            password=None,
+            backend=default_backend())
+
+    _, k = dbx.files_download('/keys.json')
+    keys = json.loads(k.content)
+    encrypted_sym_key = b64decode(keys[owner_name]["symmetric"].encode())
+    old_sym_key = crypto.decrypt_sym_key(private_key, encrypted_sym_key)
+
+    new_sym_key = crypto.generate_symmetric_key()
+    for name in keys:
+        public_key = b64decode(keys[name]["public"].encode())
+        new_encrypted_sym_key = crypto.encrypt_sym_key(public_key, new_sym_key)
+
+        info = {"public": b64encode(public_key).decode(),
+                "symmetric": new_encrypted_sym_key,
+                "owner": False,
+                "approved": True}
+        keys[name] = info
+
+    def process_folder_entries(current_state, entries):
+        for entry in entries:
+            if isinstance(entry, dropbox.files.FileMetadata):
+                current_state[entry.path_lower] = entry
+            elif isinstance(entry, dropbox.files.DeletedMetadata):
+                current_state.pop(entry.path_lower, None)
+        return current_state
+
+    result = dbx.files_list_folder(path="")
+    files = process_folder_entries({}, result.entries)
+
+    # check for and collect any additional entries
+    while result.has_more:
+        result = dbx.files_list_folder_continue(result.cursor)
+        files = process_folder_entries(files, result.entries)
+
+    filenames = []
+    for filename in sorted(files):
+        if filename != "/keys.json":
+            filenames.append(filename[1:])
+
+    for filename in filenames:
+        _, f = dbx.files_download('/' + filename)
+        decrypted_file_contents = crypto.decrypt_file(old_sym_key, f.content)
+        dbx.files_delete('/' + filename)
+
+        encrypted_file_contents = crypto.encrypt_file(new_sym_key, decrypted_file_contents)
+        encrypted_file_name = "/{}.encrypted".format(filename)
+        dbx.files_upload(encrypted_file_contents, encrypted_file_name)
 
     keys = json.dumps(keys)
 

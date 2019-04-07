@@ -59,6 +59,7 @@ def download_file(request, filename, username):
     _, f = dbx.files_download('/' + filename)
     decrypted_file_contents = crypto.decrypt_file(sym_key, f.content)
 
+
     response = HttpResponse(decrypted_file_contents)
     response['content_type'] = ''
     response['Content-Disposition'] = 'attachment;filename={}'.format(filename[:-len(".encrypted")])
