@@ -19,9 +19,7 @@ PUBLIC_FILE = 'secure_cloud/keys/public_key.pem'
 
 def generate_symmetric_key():
     key_length = 32
-    # generate key using cryptographically secure pseudo-random number generator
-    secret_key = os.urandom(key_length)
-    return secret_key
+    return os.urandom(key_length)
 
 
 def generate_key_pair():
