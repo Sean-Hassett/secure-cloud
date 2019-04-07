@@ -89,4 +89,4 @@ def upload_file(request, username):
         encrypted_file_name = "/{}.encrypted".format(up_file.name)
         dbx.files_upload(encrypted_file_contents, encrypted_file_name)
 
-    return redirect("view_files", username)
+    return redirect("files:view_files", username)

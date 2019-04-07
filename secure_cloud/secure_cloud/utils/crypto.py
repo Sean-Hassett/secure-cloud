@@ -7,10 +7,9 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from base64 import b64encode, b64decode
+from base64 import b64encode
 
 
-CHUNK_SIZE = 64*1024
 BLOCK_SIZE = 16
 PUBLIC_EXPONENT = 65537
 KEY_SIZE = 2048
@@ -25,7 +24,7 @@ def generate_symmetric_key():
     return secret_key
 
 
-def generate_keypair():
+def generate_key_pair():
     private_key = rsa.generate_private_key(
         public_exponent=PUBLIC_EXPONENT,
         key_size=KEY_SIZE,
@@ -84,17 +83,14 @@ def encrypt_file(symmetric_key, input_file):
     ).encryptor()
 
     try:
-        # .txt, .jpg
         in_data = input_file.getvalue()
     except AttributeError:
-        # .mp4
         in_data = input_file.read()
 
     out_data = b""
     out_data += nonce
-    for i in range(0, len(in_data), CHUNK_SIZE):
-        chunk = in_data[i:i + CHUNK_SIZE]
-        out_data += encryptor.update(chunk)
+    out_data += encryptor.update(in_data)
+
     return out_data
 
 
@@ -107,8 +103,6 @@ def decrypt_file(symmetric_key, in_data):
     ).decryptor()
 
     out_data = b""
-    for i in range(BLOCK_SIZE, len(in_data), CHUNK_SIZE):
-        chunk = in_data[i:i + CHUNK_SIZE]
-        out_data += decryptor.update(chunk)
+    out_data += decryptor.update(in_data[BLOCK_SIZE:])
 
     return out_data

@@ -3,3 +3,4 @@
 .idea/
 /test_files/
 secure_cloud/db.sqlite3
+/screens/

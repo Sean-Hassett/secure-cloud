@@ -49,7 +49,7 @@ def guest_login(request):
         keys = json.loads(k.content)
         if guest_name in keys:
             if keys[guest_name]["approved"]:
-                return redirect("view_files", guest_name)
+                return redirect("files:view_files", guest_name)
             else:
                 context = {"name": guest_name,
                            "requesting": False,
@@ -75,7 +75,7 @@ def request_access(request):
     _, k = dbx.files_download('/keys.json')
 
     keys = json.loads(k.content)
-    private_key, public_key = crypto.generate_keypair()
+    private_key, public_key = crypto.generate_key_pair()
 
     info = {"public": b64encode(public_key).decode(),
             "symmetric": '',
@@ -144,7 +144,7 @@ def revoke_access(request, guest_name):
 
 def initialise(request):
     name = request.POST['owner_name'].lower()
-    private_key, public_key = crypto.generate_keypair()
+    private_key, public_key = crypto.generate_key_pair()
 
     key_length = 32
     # generate symmetric key using cryptographically secure pseudo-random number generator
